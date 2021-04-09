@@ -87,8 +87,8 @@ def infinite_infer_run():
         # This object detection model is implemented as single shot detector (ssd), since
         # the number of labels is small we create a dictionary that will help us convert
         # the machine labels to human readable labels.
-        model_type = 'ssd'
-        output_map = {0: 'kit-kat', 1: 'flake' }
+        model_type = 'ssd' ###### CHANGE BASED ON MODEL TYPE
+        output_map = {0: 'kit-kat', 1: 'flake' } ###### CHANGE BASED ON NUMBER OF OUTPUT AND NUMBERS ASSIGNED
         # Create an IoT client for sending to messages to the cloud.
         client = greengrasssdk.client('iot-data')
         iot_topic = '$aws/things/{}/infer'.format(os.environ['AWS_IOT_THING_NAME'])
@@ -98,12 +98,12 @@ def infinite_infer_run():
         local_display.start()
 
         # The height and width of the training set images
-        input_height = 480
+        input_height = 480 ###### CHANGE BOTH BASED ON TRAINING IMAGE SIZE
         input_width = 480
 
         #model_path = "/opt/awscam/artifacts/deploy_jhg_choc_model_algo_1.xml"
         
-        res, model_path = mo.optimize('deploy_jhg_refined', input_height, input_width)
+        res, model_path = mo.optimize('deploy_jhg_refined', input_height, input_width) ##### CHANGE MODEL NAME (FIRST FUNCTION INPUT) TO MATCH RECTIFIED MODEL'S PREFIX
         if res == 0:
             client.publish(topic=iot_topic, payload='Model optimized successful. The optimized model is "{}"'.format(model_path))
         else:
@@ -138,8 +138,14 @@ def infinite_infer_run():
             # Dictionary to be filled with labels and probabilities for MQTT
             cloud_output = {}
             # Get the detected objects and probabilities
+            #k = 0
+            #f = 0
             for obj in parsed_inference_results[model_type]:
                 if obj['prob'] > detection_threshold:
+                   # if obj['label'] == 0
+                  #      k += 1
+                  #  elif obj['label'] == 1
+                  #      f += 1
                     # Add bounding boxes to full resolution frame
                     xmin = int(xscale * obj['xmin'])
                     ymin = int(yscale * obj['ymin'])
@@ -161,10 +167,13 @@ def infinite_infer_run():
                                 cv2.FONT_HERSHEY_SIMPLEX, 2.5, (255, 165, 20), 6)
                     # Store label and probability to send to cloud
                     cloud_output[output_map[obj['label']]] = obj['prob']
-            # Set the next frame in the local display stream.
+                    #cv2.putText(frame, "KitKat count = {}, Flake count = {}".format(k,f), (20, 50),
+                    #            cv2.FONT_HERSHEY_SIMPLEX, 10, (0, 0, 255), 6)
+                   
             local_display.set_frame_data(frame)
             # Send results to the cloud
             client.publish(topic=iot_topic, payload=json.dumps(cloud_output))
+            
     except Exception as ex:
         client.publish(topic=iot_topic, payload='Error in object detection lambda: {}. Stack trace: {}'.format(ex, traceback.format_exc().splitlines()))
 
