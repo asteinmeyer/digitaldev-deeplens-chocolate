@@ -66,10 +66,12 @@ For input data configuration, you will see a channel named “train”. Within t
 -	S3 data type as “Augmented Manifest File”
 -	For the Augmented Manifest File attribute names, type “source-ref”, then add a row and type your labelling job name, e.g. “objectlabellingjob2021”
 -	Input the relevant bucket path for the manifest file. This is created by utilising the notebook instance that has been provided
-You will then need to add another channel and name this one “validation”. Repeat all the above steps for this new validation channel, except for the s3 location, as the notebook instance will provide you a unique location for this channel as well.
+- You will then need to add another channel and name this one “validation”. Repeat all the above steps for this new validation channel, except for the s3 location, as the notebook instance will provide you a unique location for this channel as well.
+
 After providing the location of your output folder with the s3 bucket for output data configuration, you can begin your training job.
 After a short period, the training status will update from “starting” to “training”. Once this has occurred, we can monitor its progress. The value of interest with these training job is the validation m:AP variable. The higher this value is, the more accurate your model is performing (0 < m:AP < 1). Whilst this value does occur in a graphical form once enough epochs have been executed, a much better way of viewing the training job output is by pressing “View logs” above these graphs. Select the stream that is relevant to your training job and then ctrl + f “validation”. You will see each occurrence of the individual epochs’ validation m:AP value, and if it achieves a new highest value for this variable, it will update the model based on that epoch.
 Once the Sagemaker training job is completed, this is also how you should observe the final result as well.
+
 OPTIONAL:
 If you are not getting results that are quite as high as you like, you can use a hyperparameter tuning job to refine various constants that were listed above to match your desired model. Repeat the same parameters as listed above, with two alterations:
 -	Have learning rate as continuous: 0.0001 – 0.01
@@ -105,6 +107,7 @@ Step 7: Initiate Project and view output (Deeplens)
 
 We can now finally upload our custom project onto the deeplens. Go into projects and create a new project, importing the correct lambda function and model. Upload this project onto the deeplens device you wish to use. 
 Once it has finished uploading, there are a variety of ways we can view the output of the deeplens. The first one, which can also be utilised for troubleshooting, is using the AWS IoT output. Within your device details, you should see a url to the AWS IoT Thing that relates to the device, plus a link to the AWS IoT console. Click this link and subscribe to the URL that is given to you. If the device is not operating correctly, you should get an error message that relates to a line of code within your lambda. If it is working correctly you should get an output of “{}” with the object scores within these brackets when the deeplens sees one of the objects it has been trained to detect. 
+
 There are two ways to view the project feed that actually draws the bounding box around these objects. The first is via the project stream on the Deeplens Console on your browser. On the same page you attained the AWS IoT URL, you should find and option to view the livestream. Once installing the relevant certificate, you should be able to see the project view, as well as the regular video view for the machine as well. Note that in order for this to work, the device must be successfully connected to the internet, which can be checked either on the device settings or the wifi-indicator on the deeplens itself. The final way to view the output is via the deeplens itself. Connect a HDMI-MicroUSB cable from the deeplens to the monitor and input the password into the device (can be found via the SSH settings in the deeplens console). Open a command window and input the following command: 
 
 mplayer -demuxer lavf -lavfdopts format=mjpeg:probesize=32 /tmp/results.mjpeg
