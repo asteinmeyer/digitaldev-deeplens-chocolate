@@ -31,9 +31,8 @@ Step 3: Labelling Job (Sagemaker: Ground Truth)
 -	For Worker type, you can choose public should you not want to label the images yourself and are prepared to pay for the service. Alternatively select private, and then select/create a labelling team which you can add workers to yourself
 -	Fill out the description section of the labelling screen and the relevant tags for the objects you want to be labelled.
 -	Click submit
+
 Have fun Labelling!
-
-
 
 
 Step 4: Training Job (Sagemaker)
@@ -45,6 +44,8 @@ IMPORTANT: Ensure that the Sagemaker Training Job name begins with “deeplens-�
 -	Select a role that has the appropriate access
 -	For algorithm source, select Amazon Sagemaker built-in algorithm, then from the drop-down menu select “object detection”
 -	Our instance type needs to me of the p2 or p3 type as this is the instance kind that utilises a GPU. P2.xlarge should be fine for most cases, but if you like to live life in the fast-lane, x8 or x16 will complete your job lickety-split.
+
+
 The hyperparameter section of the training job is contentious to say the least. For starters there are the parameters that we absolutely need to set:
 -	Base_network = resnet-50
 -	Use_pretrainged_model = 1
