@@ -103,7 +103,7 @@ Obviously you will need to adapt this command to the training job that you utili
 
 Step 6: Create Inference Function (Lambda)
 
-Navigate to the AWS Lambda console and create a function. Ensure that the Lambda function name begins with “deeplens-“ or else the deeplens will not be able to read the data. Also ensure you use a blueprint that includes the GreengrassDK environment. The Lambda is provided within this Git Repository, with some minor alterations needed to be made to cater for your specific project variables, which is highlighted in the code itself (namely model name, output map, image size and model type).
+Navigate to the AWS Lambda console and create a function. Ensure that the Lambda function name begins with “deeplens-“ or else the deeplens will not be able to read the data. Also ensure you use a blueprint that includes the GreengrassDK environment (if you cannot locate it however, the folder is provided in this git). The Lambda is provided within this Git Repository, with some minor alterations needed to be made to cater for your specific project variables, which is highlighted in the code itself (namely model name, output map, image size and model type).
 
 Once you have created this lambda, click save all, then “Deploy” and then scroll up to the top of the page and select “Publish new Version”. You will need to do these steps every time you update your lambda before re-uploading it onto the deeplens.
 
