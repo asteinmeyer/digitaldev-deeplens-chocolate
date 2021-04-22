@@ -101,9 +101,9 @@ def infinite_infer_run():
         input_height = 480 ###### CHANGE BOTH BASED ON TRAINING IMAGE SIZE
         input_width = 480
 
-        #model_path = "/opt/awscam/artifacts/deploy_jhg_choc_model_algo_1.xml"
+        #model_path = "/opt/awscam/artifacts/deploy_jhg_choc_model_algo_1.xml" #only use this code if you have imported the artifacts externally
         
-        res, model_path = mo.optimize('deploy_multichocmodel', input_height, input_width) ##### CHANGE MODEL NAME (FIRST FUNCTION INPUT) TO MATCH RECTIFIED MODEL'S PREFIX
+        res, model_path = mo.optimize('deploy_final_choc_model', input_height, input_width) ##### CHANGE MODEL NAME (FIRST FUNCTION INPUT) TO MATCH RECTIFIED MODEL'S PREFIX
         if res == 0:
             client.publish(topic=iot_topic, payload='Model optimized successful. The optimized model is "{}"'.format(model_path))
         else:
@@ -113,7 +113,8 @@ def infinite_infer_run():
         model = awscam.Model(model_path, {'GPU': 1})
         client.publish(topic=iot_topic, payload='Object detection model loaded')
         # Set the threshold for detection
-        detection_threshold = 0.30
+        detection_threshold_k = 0.40 #kitkat threshold
+        detection_threshold_f = 0.40 #flake threshold
 
         # Do inference until the lambda is killed.
         while True:
@@ -141,7 +142,8 @@ def infinite_infer_run():
             k = 0
             f = 0
             for obj in parsed_inference_results[model_type]:
-                if obj['prob'] > detection_threshold:
+                if (((obj['prob'] > detection_threshold_k) and (obj['label'] == 0)) or ((obj['prob'] > detection_threshold_f) and (obj['label'] == 1))): #if kitkat or flake passes threshold
+                    #code for counting
                     if obj['label'] == 0:
                        k += 1
                     elif obj['label'] == 1:
@@ -169,6 +171,7 @@ def infinite_infer_run():
                     cloud_output[output_map[obj['label']]] = obj['prob']
                     
                    
+            #write the count of each chocolate to the screen
             cv2.putText(frame, "KitKat count = {}, Flake count = {}".format(k,f), (40, 80),
                                 cv2.FONT_HERSHEY_SIMPLEX, 2.5, (0, 0, 255), 6)
             local_display.set_frame_data(frame)
@@ -197,4 +200,3 @@ infinite_infer_run()
 
 def lambda_handler():
     pass
-
