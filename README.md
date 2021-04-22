@@ -25,8 +25,8 @@ Step 3: Labelling Job (Sagemaker: Ground Truth)
 -	Select Automated data setup
 -	For input, select the location of the “input” folder within the s3 bucket you created
 -	For output, select “Specify a new location” and select the output folder within the s3 bucket you created
--	Click “Complete data setup”
 -	For data Type, we want “image”
+-	Click “Complete data setup”
 -	Select the relevant task type, for object detection we will choose “Bounding box”, then click Next
 -	For Worker type, you can choose public should you not want to label the images yourself and are prepared to pay for the service. Alternatively select private, and then select/create a labelling team which you can add workers to yourself
 -	Fill out the description section of the labelling screen and the relevant tags for the objects you want to be labelled.
@@ -71,6 +71,7 @@ For input data configuration, you will see a channel named “train”. Within t
 
 After providing the location of your output folder with the s3 bucket for output data configuration, you can begin your training job.
 After a short period, the training status will update from “starting” to “training”. Once this has occurred, we can monitor its progress. The value of interest with these training job is the validation m:AP variable. The higher this value is, the more accurate your model is performing (0 < m:AP < 1). Whilst this value does occur in a graphical form once enough epochs have been executed, a much better way of viewing the training job output is by pressing “View logs” above these graphs. Select the stream that is relevant to your training job and then ctrl + f “validation”. You will see each occurrence of the individual epochs’ validation m:AP value, and if it achieves a new highest value for this variable, it will update the model based on that epoch.
+
 Once the Sagemaker training job is completed, this is also how you should observe the final result as well.
 
 OPTIONAL:
@@ -85,17 +86,18 @@ Step 5: Create Model (Sagemaker/Desktop)
 
 Select the training job that you created and select create a model. There are no special requirements for this model in particular. Once that is done, you can also create an endpoint for the model as well. Easy!
 
-The following is only necessary for single-shot object detection. For some reason there is layering issues with this type of code, so we must rectify the model artifacts manually in order for it to be readable on the deeplens. 
+The following is only necessary for single-shot object detection. For some reason there are layering issues with this type of code, so we must rectify the model artifacts manually in order for it to be readable on the deeplens. 
 
-First, navigate to the to the output of the training job in s3 where the model artifacts lie (bucketname/output/trainingjobname/output). The relevant file should be named “model.tar.gz”. Save this file to your computer, and then using a zip tool such as 7zip, extract the files that lie within that destination. There should be 3 files named “model_algo_1.json”, “model_algo_1.params” etc. You will need to rename these model artifacts’ prefixes to whatever suits the context of your project e.g. jhg_choc_model_algo_1.
+First, navigate to the to the output of the training job in s3 where the model artifacts lie (bucketname/output/trainingjobname/output). The relevant file should be named “model.tar.gz”. Save this file to your computer, and then using a zip tool such as 7zip, extract the files that lie within that destination. There should be 3 files named “model_algo_1.json”, “model_algo_1.params” etc. You will need to rename these model artifacts’ prefixes to whatever suits the context of your project e.g. jhg_choc_model_algo_1, ensuring to keep the rest of the name intact
+.
 The alteration of the model artifacts must be carried out using a python script that we can grab from git.
-
 IMPORTANT: Script must be run using python 2 and not python 3, so ensure python 2 is installed appropriately.
 
 Input this command into gitbash: git clone https://github.com/zhreshold/mxnet-ssd.git
-Now navigate to the where the mxnet folder has been saved. You will need to move the models that you have unzipped and renamed into the “Models” folder. cd into the mxnet folder from the command window and install mxnet using this command: “mxnet==1.1.0.post0”. Once mxnet is installed in this folder, input the following command to rectify the model artifacts: 
+Now navigate to the where the mxnet folder has been saved. You will need to move the models that you have unzipped and renamed into the “Models” folder. NOW cd into the mxnet folder from the command window and install mxnet using this command: “mxnet==1.1.0.post0”. Once mxnet is installed in this folder, input the following command to rectify the model artifacts: 
 
 python deploy.py --network vgg16_reduced --prefix model/jhg_choc_model_algo_1 --nms 0.45 --data-shape 480 --num-class 2
+
 Obviously you will need to adapt this command to the training job that you utilised to create this model, where – prefix is the prefix you renamed your model artifacts to. If this command has been executed correctly, there will now be the same files but with two new artifacts starting with “deploy_”. Take note of this name as you will need to use it in your lambda function for inference. You will need to use 7zip to turn these files back into “model.tar.gz”. You need to do this by turning them into a “.tar” first and then subsequently a “.tar.gz”. Upload these model artifacts to the original s3 location with the same name, replacing the old one. 
 
 Step 6: Create Inference Function (Lambda)
@@ -112,6 +114,7 @@ Once it has finished uploading, there are a variety of ways we can view the outp
 There are two ways to view the project feed that actually draws the bounding box around these objects. The first is via the project stream on the Deeplens Console on your browser. On the same page you attained the AWS IoT URL, you should find and option to view the livestream. Once installing the relevant certificate, you should be able to see the project view, as well as the regular video view for the machine as well. Note that in order for this to work, the device must be successfully connected to the internet, which can be checked either on the device settings or the wifi-indicator on the deeplens itself. The final way to view the output is via the deeplens itself. Connect a HDMI-MicroUSB cable from the deeplens to the monitor and input the password into the device (can be found via the SSH settings in the deeplens console). Open a command window and input the following command: 
 
 mplayer -demuxer lavf -lavfdopts format=mjpeg:probesize=32 /tmp/results.mjpeg
+
 The feed should appear now in a new window. Note that this feed is only viable if a resnet50 framework was utilised in the training job. 
 
 
