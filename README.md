@@ -66,10 +66,11 @@ For input data configuration, you will see a channel named “train”. Within t
 -	Record Wrapper as “RecordIO”
 -	S3 data type as “Augmented Manifest File”
 -	For the Augmented Manifest File attribute names, type “source-ref”, then add a row and type your labelling job name, e.g. “objectlabellingjob2021”
--	Input the relevant bucket path for the manifest file. This is created by utilising the notebook instance that has been provided
+-	Input the relevant bucket path for the manifest file. This is created by utilising the notebook instance that has been provided. This will also determine the number of training samples you utilise as well so be sure to complete the notebook before taking this step.
 - You will then need to add another channel and name this one “validation”. Repeat all the above steps for this new validation channel, except for the s3 location, as the notebook instance will provide you a unique location for this channel as well.
 
 After providing the location of your output folder with the s3 bucket for output data configuration, you can begin your training job.
+
 After a short period, the training status will update from “starting” to “training”. Once this has occurred, we can monitor its progress. The value of interest with these training job is the validation m:AP variable. The higher this value is, the more accurate your model is performing (0 < m:AP < 1). Whilst this value does occur in a graphical form once enough epochs have been executed, a much better way of viewing the training job output is by pressing “View logs” above these graphs. Select the stream that is relevant to your training job and then ctrl + f “validation”. You will see each occurrence of the individual epochs’ validation m:AP value, and if it achieves a new highest value for this variable, it will update the model based on that epoch.
 
 Once the Sagemaker training job is completed, this is also how you should observe the final result as well.
@@ -94,15 +95,15 @@ The alteration of the model artifacts must be carried out using a python script 
 IMPORTANT: Script must be run using python 2 and not python 3, so ensure python 2 is installed appropriately.
 
 Input this command into gitbash: git clone https://github.com/zhreshold/mxnet-ssd.git
-Now navigate to the where the mxnet folder has been saved. You will need to move the models that you have unzipped and renamed into the “Models” folder. NOW cd into the mxnet folder from the command window and install mxnet using this command: “mxnet==1.1.0.post0”. Once mxnet is installed in this folder, input the following command to rectify the model artifacts: 
+Now navigate to the where the mxnet folder has been saved. You will need to move the models that you have unzipped and renamed into the “Models” folder. Now cd into the mxnet folder from the command window and install mxnet using this command: “mxnet==1.1.0.post0”. Once mxnet is installed in this folder, input the following command to rectify the model artifacts: 
 
-python deploy.py --network vgg16_reduced --prefix model/jhg_choc_model_algo_1 --nms 0.45 --data-shape 480 --num-class 2
+python deploy.py --network resnet50 --prefix model/jhg_choc_model_algo_1 --nms 0.45 --data-shape 480 --num-class 2
 
 Obviously you will need to adapt this command to the training job that you utilised to create this model, where – prefix is the prefix you renamed your model artifacts to. If this command has been executed correctly, there will now be the same files but with two new artifacts starting with “deploy_”. Take note of this name as you will need to use it in your lambda function for inference. You will need to use 7zip to turn these files back into “model.tar.gz”. You need to do this by turning them into a “.tar” first and then subsequently a “.tar.gz”. Upload these model artifacts to the original s3 location with the same name, replacing the old one. 
 
 Step 6: Create Inference Function (Lambda)
 
-Navigate to the AWS Lambda console and create a function. Ensure that the Lambda function name begins with “deeplens-“ or else the deeplens will not be able to read the data. The Lambda is provided within this Git Repository, with some minor alterations needed to be made to cater for your specific project variables, which is highlighted in the code itself.
+Navigate to the AWS Lambda console and create a function. Ensure that the Lambda function name begins with “deeplens-“ or else the deeplens will not be able to read the data. Also ensure you use a blueprint that includes the GreengrassDK environment. The Lambda is provided within this Git Repository, with some minor alterations needed to be made to cater for your specific project variables, which is highlighted in the code itself (namely model name, output map, image size and model type).
 
 Once you have created this lambda, click save all, then “Deploy” and then scroll up to the top of the page and select “Publish new Version”. You will need to do these steps every time you update your lambda before re-uploading it onto the deeplens.
 
